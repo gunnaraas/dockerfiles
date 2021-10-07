@@ -31,7 +31,7 @@ services:
       - OPENVPN_PASSWORD=<vpn_password> 
       - SERVER_HOSTNAME=<vpn_hostname> 
       - PORT_FORWARDING=on
-    ports:                                                  # Ports for the application gluetun is tunneling need to be routed here first
+    ports:                                                 # Ports for the application gluetun is tunneling need to be routed here first
       - 6881:6881
       - 6881:6881/udp
       - 8080:8080
