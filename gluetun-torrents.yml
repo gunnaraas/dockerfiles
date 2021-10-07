@@ -1,0 +1,37 @@
+# This docker-compose file deploys a qbittorrent container wherein all bittorrent traffic is routed through a VPN. 
+# This was deployed on a Raspberry Pi 4+ (8GB) running OpenMediaVault with as the file directory. 
+# End result is a copyright troll love letter resistent, low power, at-home seedbox. 
+# Transfer speeds are disappointing (10 MB/s on gigabit fiber) but it is functional as written. 
+# Network tunneling not enabled on Rasbian by default. Install raspberrypi-kernel-headers to enable.  
+# Deployed as Portainer Stack no-CLI ease of use.
+---
+version: "3"
+services:
+  qbittorrent:
+    image: ghcr.io/linuxserver/qbittorrent
+    container_name: qbittorrent
+    environment:
+      - PUID=1001                                          # Set to a value that has read/write permissions to volumes listed below 
+      - PGID=100                                           # Set to a value that has read/write permissions to volumes listed below 
+      - TZ=America/Chicago
+      - WEBUI_PORT=8080
+    volumes:
+      - /srv/dev-disk-by-uuid-<uuid>/<path>:/config        # Find UUID in OMV web UI: Access Management Rights > Shared Folders 
+      - /srv/dev-disk-by-uuid-<uuid>/<path>:/downloads     # Make sure PUID & PGID have read/write access to the volumes listed here
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+  gluetun: 
+    image: qmcgaw/gluetun
+    container_name: gluetun 
+    cap_add: 
+      - NET_ADMIN
+    environment: 
+      - VPNSP=private internet access                      # Environment variables for different providers available at https://github.com/qdm12/gluetun/wiki/
+      - OPENVPN_USER=<vpn_username> 
+      - OPENVPN_PASSWORD=<vpn_password> 
+      - SERVER_HOSTNAME=<vpn_hostname> 
+      - PORT_FORWARDING=on
+    ports:                                                  # Ports for the application gluetun is tunneling need to be routed here first
+      - 6881:6881
+      - 6881:6881/udp
+      - 8080:8080
